@@ -18,12 +18,15 @@ package de.themoep.idconverter;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import java.awt.GraphicsEnvironment;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +48,79 @@ public class IdConverter {
             return;
         }
     
-        new Gui(p.getProperty("application.name") + " v" + p.getProperty("application.version")).setVisible(true);
+        if (System.console() == null && !GraphicsEnvironment.isHeadless()) {
+            new Gui(p.getProperty("application.name") + " v" + p.getProperty("application.version")).setVisible(true);
+        } else if (!run(args)){
+            System.out.print("Usage: " + p.getProperty("application.name") + ".jar <file/folder name>\n" +
+                    " -r,--regex <regex>        Regex for matching the ID string. Needs to have 3 groups. (One before, one the ID and the third the stuff after the ID) (Default: (\\W*)(\\d+)(\\W*))\n" +
+                    " -f,--file-match <regex>   Files need to match this regex for the tool to replace stuff inside them (Default: \\w+\\.yml)\n" +
+                    " -l,--lowercase true/false Should the material name be lowercase? (Default: true)\n" +
+                    "All parameters are optional\n");
+        }
+    }
+    
+    private static boolean run(String[] args) {
+        if (args.length == 0) {
+            return false;
+        }
+        String path = args[0];
+    
+        String regex = "(\\W*)(\\d+)(\\W*)";
+        boolean lowercase = true;
+        String fileRegex = "\\w+\\.yml";
+        
+        String par = "";
+        int i = 0;
+        while (i + 2 < args.length) {
+            i++;
+            int start = 0;
+            if (args[i].startsWith("-")) {
+                start = 1;
+            } else if (args[i].startsWith("--")) {
+                start = 2;
+            } else if (par.isEmpty()){
+                System.out.print("Wrong parameter " + args[i] + "!\n");
+                return false;
+            }
+            
+            par = args[i].substring(start);
+            i++;
+            String value = args[i];
+            if (value.startsWith("\"")) {
+                boolean endFound = false;
+                StringBuilder sb = new StringBuilder(value);
+                for (int j = i + 1; j < args.length; j++) {
+                    sb.append(" ").append(args[j]);
+                    if (args[j].endsWith("\"")) {
+                        endFound = true;
+                        i = j;
+                        break;
+                    }
+                }
+                if (endFound) {
+                    value = sb.toString();
+                    value = value.substring(1, value.length() - 1);
+                }
+            }
+            
+            if ("r".equals(par) || "regex".equalsIgnoreCase(par)) {
+                regex = value;
+            } else if ("f".equals(par) || "file-matches".equalsIgnoreCase(par)) {
+                fileRegex = value;
+            } else if ("l".equals(par) || "lowercase".equalsIgnoreCase(par)) {
+                lowercase = Boolean.parseBoolean(value);
+            }
+        }
+        
+        ReturnState r = replace(regex, lowercase, Collections.singletonList(Paths.get(path)), fileRegex);
+        if (r.getType() == ReturnType.SUCCESS) {
+            System.out.print("Successfully replaced IDs in file(s) with Material names!\n");
+        } else if (r.getMessage().isPresent()) {
+            System.out.print(r.getType().toHuman() +": " + r.getMessage().get() + "\n");
+        } else {
+            System.out.print(r.getType().toHuman() + "!" + "\n");
+        }
+        return true;
     }
     
     /**
