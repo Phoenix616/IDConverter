@@ -202,11 +202,11 @@ public class IdConverter {
                 ReturnState rs = new ReturnState();
                 
                 if (!Files.exists(p)) {
-                    rs = new ReturnState(ReturnType.MISSING_FILE);
+                    rs = new ReturnState(ReturnType.MISSING_FILE, p.toString());
                 } else if (!Files.isWritable(p)) {
-                    rs = new ReturnState(ReturnType.FILE_NOT_WRITABLE);
+                    rs = new ReturnState(ReturnType.FILE_NOT_WRITABLE, p.toString());
                 } else if (!Files.isReadable(p)) {
-                    rs = new ReturnState(ReturnType.FILE_NOT_READABLE);
+                    rs = new ReturnState(ReturnType.FILE_NOT_READABLE, p.toString());
                 } else if (Files.isRegularFile(p)) {
                     if (fileRegex.matcher(p.toFile().getName()).matches()) {
                         rs = replaceInFile(p, regex, lowercase);
