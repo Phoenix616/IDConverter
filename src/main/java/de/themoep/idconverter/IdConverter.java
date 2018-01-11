@@ -80,7 +80,6 @@ public class IdConverter {
     }
     
     private static ReturnState replaceInFile(Path path, Pattern fileRegex, Pattern regex, boolean lowercase) {
-        String fileName = path.toFile().getName();
         if (!fileRegex.matcher(path.toFile().getName()).matches()) {
             return new ReturnState(ReturnType.SUCCESS);
         }
