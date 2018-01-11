@@ -146,7 +146,7 @@ public class IdConverter {
         
         for (Path path : paths) {
             if (Files.isRegularFile(path)) {
-                return replaceInFile(path, fileRegex, regex, lowercase);
+                return replaceInFile(path, regex, lowercase);
             } else if (Files.isDirectory(path)) {
                 return replaceInDirectory(path, fileRegex, regex, lowercase);
             }
@@ -154,11 +154,7 @@ public class IdConverter {
         return new ReturnState(ReturnType.SUCCESS);
     }
     
-    private static ReturnState replaceInFile(Path path, Pattern fileRegex, Pattern regex, boolean lowercase) {
-        if (!fileRegex.matcher(path.toFile().getName()).matches()) {
-            return new ReturnState(ReturnType.SUCCESS);
-        }
-        
+    private static ReturnState replaceInFile(Path path, Pattern regex, boolean lowercase) {
         Charset charset = StandardCharsets.UTF_8;
         try {
             String content = new String(Files.readAllBytes(path), charset);
@@ -201,6 +197,7 @@ public class IdConverter {
     private static ReturnState replaceInDirectory(Path path, Pattern fileRegex, Pattern regex, boolean lowercase) {
         ReturnState r = new ReturnState(ReturnType.SUCCESS);
         try {
+            
             Files.list(path).forEach(p -> {
                 ReturnState rs = new ReturnState();
                 
@@ -211,7 +208,9 @@ public class IdConverter {
                 } else if (!Files.isReadable(p)) {
                     rs = new ReturnState(ReturnType.FILE_NOT_READABLE);
                 } else if (Files.isRegularFile(p)) {
-                    rs = replaceInFile(p, fileRegex, regex, lowercase);
+                    if (fileRegex.matcher(p.toFile().getName()).matches()) {
+                        rs = replaceInFile(p, regex, lowercase);
+                    }
                 } else if (Files.isDirectory(p)) {
                     rs = replaceInDirectory(p, fileRegex, regex, lowercase);
                 }
