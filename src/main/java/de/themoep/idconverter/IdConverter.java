@@ -52,8 +52,8 @@ public class IdConverter {
             new Gui(p.getProperty("application.name") + " v" + p.getProperty("application.version")).setVisible(true);
         } else if (!run(args)){
             System.out.print("Usage: " + p.getProperty("application.name") + ".jar <file/folder name>\n" +
-                    " -rf,--replace-from        The type of ID to replace from. Possible values: numeric, old (pre 1.13), flattening (Default: numeric)" +
-                    " -rt,--replace-to          The type of ID to replace to. Possible values: numeric, old (pre 1.13), flattening (Default: flattening)" +
+                    " -rf,--replace-from        The type of ID to replace from. Possible values: numeric, legacy (pre 1.13), flattening (Default: numeric)" +
+                    " -rt,--replace-to          The type of ID to replace to. Possible values: numeric, legacy (pre 1.13), flattening (Default: flattening)" +
                     " -r,--regex <regex>        Regex for matching the ID string. Needs to have 3 groups. (One before, one the ID and the third the stuff after the ID) (Default: depending on replace-from)\n" +
                     " -f,--file-match <regex>   Files need to match this regex for the tool to replace stuff inside them (Default: \\w+\\.yml)\n" +
                     " -l,--lowercase true/false Should the material name be lowercase? (Default: true)\n" +
