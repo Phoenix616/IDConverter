@@ -23,20 +23,18 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import java.awt.BorderLayout;
 import java.awt.Checkbox;
 import java.io.File;
-import java.util.ArrayList;
+import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class Gui extends JFrame {
-    
-    List<File> selectedFiles = new ArrayList<>();
     
     public Gui(String title) {
         super(title);
@@ -45,9 +43,42 @@ public class Gui extends JFrame {
         
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         
+        JTextField regexField = new JTextField("", 20);
+        
+        JPanel replaceTypeLine = new JPanel();
+        
+        JPanel replaceFromColumn = new JPanel();
+        replaceFromColumn.add(new JLabel("Replace from:"));
+        JList<IdMappings.IdType> replaceFromList = new JList<>(IdMappings.IdType.values());
+        replaceFromList.setSelectedValue(IdMappings.IdType.NUMERIC, true);
+        replaceFromList.setLayout(new BorderLayout(5, 5));
+        replaceFromList.addListSelectionListener(e -> {
+            for (IdMappings.IdType type : IdMappings.IdType.values()) {
+                if (type.getRegex().equals(regexField.getText())) {
+                    regexField.setText(replaceFromList.getSelectedValue().getRegex());
+                    return;
+                }
+            }
+        });
+        replaceFromColumn.add(replaceFromList);
+        
+        replaceTypeLine.add(replaceFromColumn);
+    
+        JPanel replaceToColumn = new JPanel();
+        replaceToColumn.add(new JLabel("Replace to:"));
+        JList<IdMappings.IdType> replaceToList = new JList<>(IdMappings.IdType.values());
+        replaceToList.setSelectedValue(IdMappings.IdType.FLATTENING, true);
+        replaceToList.setLayout(new BorderLayout(5, 5));
+        replaceToColumn.add(replaceToList);
+        
+        replaceTypeLine.add(replaceToColumn);
+        
+        getContentPane().add(replaceTypeLine);
+        
         JPanel regexLine = new JPanel();
         regexLine.add(new JLabel("ID strings have to match:"));
-        JTextField regexField = new JTextField("(\\W*)(\\d+)(\\W*)", 20);
+    
+        regexField.setText(replaceFromList.getSelectedValue().getRegex());
         regexLine.add(regexField);
         regexLine.add(new JLabel("(Regex)"));
         getContentPane().add(regexLine);
@@ -62,17 +93,15 @@ public class Gui extends JFrame {
         pathLine.add(pathField);
         JButton buttonSelectPath = new JButton("Select File/Directory");
         buttonSelectPath.addActionListener(e -> {
-            JFileChooser chooser = selectedFiles.isEmpty() ? new JFileChooser() : new JFileChooser(selectedFiles.get(0).getParentFile());
+            String[] paths = pathField.getText().split("\" \"");
+            JFileChooser chooser = pathField.getText().isEmpty() || paths.length == 0 ? new JFileChooser()
+                    : new JFileChooser(new File(paths[0].substring(1, paths[0].length() - 1)).getParentFile());
             chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             chooser.setMultiSelectionEnabled(true);
             chooser.showOpenDialog(null);
             if (chooser.getSelectedFiles() != null) {
-                selectedFiles.clear();
-                selectedFiles.addAll(Arrays.asList(chooser.getSelectedFiles()));
                 pathField.setText(Arrays.stream(chooser.getSelectedFiles()).map(f -> "\"" + f.getPath() + "\"").collect(Collectors.joining(" ")));
             } else if (chooser.getSelectedFile() != null) {
-                selectedFiles.clear();
-                selectedFiles.add(chooser.getSelectedFile());
                 pathField.setText(chooser.getSelectedFile().getPath());
             }
         });
@@ -89,10 +118,12 @@ public class Gui extends JFrame {
         JPanel convertPanel = new JPanel();
         JButton buttonConvert = new JButton("Convert");
         buttonConvert.addActionListener(e -> {
+            IdMappings.IdType replaceFrom = replaceFromList.getSelectedValue();
+            IdMappings.IdType replaceTo = replaceToList.getSelectedValue();
             String regex = regexField.getText();
             boolean lowercase = lowercaseBox.getState();
             String fileRegex = fileField.getText();
-            ReturnState r = IdConverter.replace(regex, lowercase, selectedFiles.stream().map(File::toPath).collect(Collectors.toList()), fileRegex);
+            ReturnState r = IdConverter.replace(Arrays.stream(pathField.getText().split("\" \"")).map(s -> Paths.get(s.substring(1, s.length() - 1))).collect(Collectors.toList()), fileRegex, replaceFrom, replaceTo, regex, lowercase);
             if (r.getType() == ReturnType.SUCCESS) {
                 JOptionPane.showMessageDialog(this, "Successfully replaced IDs in file(s) with Material names!", "SUCCESS!", JOptionPane.INFORMATION_MESSAGE);
             } else if (r.getMessage().isPresent()) {

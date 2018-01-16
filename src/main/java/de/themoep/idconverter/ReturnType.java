@@ -23,7 +23,9 @@ public enum ReturnType {
     MISSING_FILE,
     FILE_NOT_WRITABLE,
     FILE_NOT_READABLE,
-    INVALID_REGEX, UNKNOWN_ERROR;
+    INVALID_REGEX,
+    INVALID_TYPE_COMBINATION,
+    UNKNOWN_ERROR;
     
     public String toHuman() {
         return toString().replace('_', ' ');

@@ -52,7 +52,9 @@ public class IdConverter {
             new Gui(p.getProperty("application.name") + " v" + p.getProperty("application.version")).setVisible(true);
         } else if (!run(args)){
             System.out.print("Usage: " + p.getProperty("application.name") + ".jar <file/folder name>\n" +
-                    " -r,--regex <regex>        Regex for matching the ID string. Needs to have 3 groups. (One before, one the ID and the third the stuff after the ID) (Default: (\\W*)(\\d+)(\\W*))\n" +
+                    " -rf,--replace-from        The type of ID to replace from. Possible values: numeric, old (pre 1.13), flattening (Default: numeric)" +
+                    " -rt,--replace-to          The type of ID to replace to. Possible values: numeric, old (pre 1.13), flattening (Default: flattening)" +
+                    " -r,--regex <regex>        Regex for matching the ID string. Needs to have 3 groups. (One before, one the ID and the third the stuff after the ID) (Default: depending on replace-from)\n" +
                     " -f,--file-match <regex>   Files need to match this regex for the tool to replace stuff inside them (Default: \\w+\\.yml)\n" +
                     " -l,--lowercase true/false Should the material name be lowercase? (Default: true)\n" +
                     "All parameters are optional\n");
@@ -65,9 +67,12 @@ public class IdConverter {
         }
         String path = args[0];
     
-        String regex = "(\\W*)(\\d+)(\\W*)";
+        String regex = null;
         boolean lowercase = true;
         String fileRegex = "\\w+\\.yml";
+    
+        IdMappings.IdType replaceFrom = IdMappings.IdType.NUMERIC;
+        IdMappings.IdType replaceTo = IdMappings.IdType.FLATTENING;
         
         String par = "";
         int i = 0;
@@ -109,10 +114,28 @@ public class IdConverter {
                 fileRegex = value;
             } else if ("l".equals(par) || "lowercase".equalsIgnoreCase(par)) {
                 lowercase = Boolean.parseBoolean(value);
+            } else if ("rf".equals(par) || "replace-from".equalsIgnoreCase(par)) {
+                try {
+                    replaceFrom = IdMappings.IdType.valueOf(value.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    System.out.print(value + " is not a valid replace type!\n\n");
+                    return false;
+                }
+            } else if ("rt".equals(par) || "replace-to".equalsIgnoreCase(par)) {
+                try {
+                    replaceTo = IdMappings.IdType.valueOf(value.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    System.out.print(value + " is not a valid replace type!\n\n");
+                    return false;
+                }
             }
         }
         
-        ReturnState r = replace(regex, lowercase, Collections.singletonList(Paths.get(path)), fileRegex);
+        if (regex == null) {
+            regex = replaceFrom.getRegex();
+        }
+        
+        ReturnState r = replace(Collections.singletonList(Paths.get(path)), fileRegex, replaceFrom, replaceTo, regex, lowercase);
         if (r.getType() == ReturnType.SUCCESS) {
             System.out.print("Successfully replaced IDs in file(s) with Material names!\n");
         } else if (r.getMessage().isPresent()) {
@@ -125,15 +148,20 @@ public class IdConverter {
     
     /**
      * Replace the ids in a certain path that match a regex
-     * @param regexString       The regex to match
-     * @param lowercase         Whether the material name should be lowercase
      * @param paths             The paths to match
      * @param fileRegexString   The regex that the file names have to match
+     * @param replaceFrom       Which type of id do we want to replace from
+     * @param replaceTo         Which type of id do we want to replace to
+     * @param regexString       The regex to match
+     * @param lowercase         Whether the material name should be lowercase
      * @return The return state
      */
-    public static ReturnState replace(String regexString, boolean lowercase, List<Path> paths, String fileRegexString) {
+    public static ReturnState replace(List<Path> paths, String fileRegexString, IdMappings.IdType replaceFrom, IdMappings.IdType replaceTo, String regexString, boolean lowercase) {
         if (paths.isEmpty()) {
             return new ReturnState(ReturnType.MISSING_FILE, "Please select a path!");
+        }
+        if (replaceFrom == replaceTo) {
+            return new ReturnState(ReturnType.INVALID_TYPE_COMBINATION, "Please select two different types to replace from and to.");
         }
         Pattern regex;
         Pattern fileRegex;
@@ -146,45 +174,51 @@ public class IdConverter {
         
         for (Path path : paths) {
             if (Files.isRegularFile(path)) {
-                return replaceInFile(path, regex, lowercase);
+                return replaceInFile(path, replaceFrom, replaceTo, regex, lowercase);
             } else if (Files.isDirectory(path)) {
-                return replaceInDirectory(path, fileRegex, regex, lowercase);
+                return replaceInDirectory(path, replaceFrom, replaceTo, fileRegex, regex, lowercase);
             }
         }
         return new ReturnState(ReturnType.SUCCESS);
     }
     
-    private static ReturnState replaceInFile(Path path, Pattern regex, boolean lowercase) {
+    private static ReturnState replaceInFile(Path path, IdMappings.IdType replaceFrom, IdMappings.IdType replaceTo, Pattern regex, boolean lowercase) {
         Charset charset = StandardCharsets.UTF_8;
         try {
             String content = new String(Files.readAllBytes(path), charset);
             Matcher matcher = regex.matcher(content);
-            Map<String, String> replacements = new HashMap<>();
+            int offset = 0;
             while (matcher.find()) {
                 try {
                     String idStr = matcher.group(2);
-                    String group = matcher.group();
                     
-                    int id = Integer.parseInt(idStr);
+                    IdMappings.Mapping mat = IdMappings.get(replaceFrom, idStr);
                     
-                    Material mat = Material.getMaterial(id);
-                    
+                    String matString = null;
                     if (mat != null) {
-                        String matString = mat.toString();
-                        if (lowercase) {
-                            matString = matString.toLowerCase();
+                        matString = mat.get(replaceTo);
+                        if (matString == null) {
+                            if (mat.getNote() != null) {
+                                matString = "NOTE_" + idStr + ": " + mat.getNote().getText();
+                            } else {
+                                matString = "REMOVED_" + idStr;
+                            }
                         }
-                        replacements.put(group, matcher.group(1) + matString + matcher.group(3));
                     }
+                    if (matString == null) {
+                        matString = "UNKNOWN_" + idStr;
+                    }
+                    if (lowercase) {
+                        matString = matString.toLowerCase();
+                    }
+                    content = content.substring(0, matcher.start(2) + offset) + matString + content.substring(matcher.end(2) + offset);
+                    offset += matString.length() - idStr.length();
+                    //replacements.put(group, matcher.group(1) + matString + matcher.group(3));
                 } catch (IndexOutOfBoundsException e) {
                     return new ReturnState(ReturnType.INVALID_REGEX, "The regex is missing a group! There must be three groups for the free parts (before the numeric ID, the numeric ID and after the numeric ID!");
                 } catch (NumberFormatException e) {
                     return new ReturnState(ReturnType.INVALID_REGEX, "The first group in the regex matched a non-numeric character! (The ID must be the second group!)");
                 }
-            }
-            
-            for (Map.Entry<String, String> entry : replacements.entrySet()) {
-                content = content.replace(entry.getKey(), entry.getValue());
             }
             
             Files.write(path, content.getBytes(charset));
@@ -194,7 +228,7 @@ public class IdConverter {
         return new ReturnState(ReturnType.SUCCESS);
     }
     
-    private static ReturnState replaceInDirectory(Path path, Pattern fileRegex, Pattern regex, boolean lowercase) {
+    private static ReturnState replaceInDirectory(Path path, IdMappings.IdType replaceFrom, IdMappings.IdType replaceTo, Pattern fileRegex, Pattern regex, boolean lowercase) {
         ReturnState r = new ReturnState(ReturnType.SUCCESS);
         try {
             
@@ -209,10 +243,10 @@ public class IdConverter {
                     rs = new ReturnState(ReturnType.FILE_NOT_READABLE, p.toString());
                 } else if (Files.isRegularFile(p)) {
                     if (fileRegex.matcher(p.toFile().getName()).matches()) {
-                        rs = replaceInFile(p, regex, lowercase);
+                        rs = replaceInFile(p, replaceFrom, replaceTo, regex, lowercase);
                     }
                 } else if (Files.isDirectory(p)) {
-                    rs = replaceInDirectory(p, fileRegex, regex, lowercase);
+                    rs = replaceInDirectory(p, replaceFrom, replaceTo, fileRegex, regex, lowercase);
                 }
                 if (rs.getType() != ReturnType.SUCCESS) {
                     r.setType(rs.getType());
