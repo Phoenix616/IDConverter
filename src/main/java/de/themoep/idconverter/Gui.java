@@ -26,7 +26,9 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 import java.awt.BorderLayout;
 import java.awt.Checkbox;
 import java.io.File;
@@ -84,7 +86,8 @@ public class Gui extends JFrame {
         getContentPane().add(regexLine);
     
         JPanel lowercaseLine = new JPanel();
-        Checkbox lowercaseBox = new Checkbox("Lowercase Material string?", true);
+        lowercaseLine.add(new JLabel("Should the replaced Material be lowercase in the end?"));
+        Checkbox lowercaseBox = new Checkbox(null, true);
         lowercaseLine.add(lowercaseBox, BorderLayout.LINE_START);
         getContentPane().add(lowercaseLine);
         
@@ -94,8 +97,15 @@ public class Gui extends JFrame {
         JButton buttonSelectPath = new JButton("Select File/Directory");
         buttonSelectPath.addActionListener(e -> {
             String[] paths = pathField.getText().split("\" \"");
-            JFileChooser chooser = pathField.getText().isEmpty() || paths.length == 0 ? new JFileChooser()
-                    : new JFileChooser(new File(paths[0].substring(1, paths[0].length() - 1)).getParentFile());
+            String path = "";
+            if (paths.length > 0) {
+                path = paths[0];
+                if (path.startsWith("\"") && path.endsWith("\"")) {
+                    path = path.substring(1, path.length() - 1);
+                }
+            }
+            JFileChooser chooser = pathField.getText().isEmpty() || path.isEmpty() ? new JFileChooser()
+                    : new JFileChooser(new File(path).getParentFile());
             chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             chooser.setMultiSelectionEnabled(true);
             chooser.showOpenDialog(null);
@@ -107,6 +117,13 @@ public class Gui extends JFrame {
         });
         pathLine.add(buttonSelectPath);
         getContentPane().add(pathLine);
+        
+        JPanel depthLine = new JPanel();
+        depthLine.add(new JLabel("Sub folder depth:"));
+        JSpinner maxDepthSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
+        depthLine.add(maxDepthSpinner);
+        depthLine.add(new JLabel("(when selecting folder)"));
+        getContentPane().add(depthLine);
         
         JPanel fileLine = new JPanel();
         fileLine.add(new JLabel("Replace in files that match:"));
@@ -122,8 +139,17 @@ public class Gui extends JFrame {
             IdMappings.IdType replaceTo = replaceToList.getSelectedValue();
             String regex = regexField.getText();
             boolean lowercase = lowercaseBox.getState();
+            int maxDepth = (int) maxDepthSpinner.getValue();
             String fileRegex = fileField.getText();
-            ReturnState r = IdConverter.replace(Arrays.stream(pathField.getText().split("\" \"")).map(s -> Paths.get(s.substring(1, s.length() - 1))).collect(Collectors.toList()), fileRegex, replaceFrom, replaceTo, regex, lowercase);
+            ReturnState r = IdConverter.replace(Arrays.stream(pathField.getText().split("\" \"")).map(s -> {
+                if (s.startsWith("\"")) {
+                    s = s.substring(1);
+                }
+                if (s.endsWith("\"")) {
+                    s = s.substring(0, s.length() -1);
+                }
+                return Paths.get(s);
+            }).collect(Collectors.toList()), maxDepth, fileRegex, replaceFrom, replaceTo, regex, lowercase);
             if (r.getType() == ReturnType.SUCCESS) {
                 JOptionPane.showMessageDialog(this, "Successfully replaced IDs in file(s) with Material names!", "SUCCESS!", JOptionPane.INFORMATION_MESSAGE);
             } else if (r.getMessage().isPresent()) {

@@ -50,9 +50,10 @@ public class IdConverter {
             new Gui(p.getProperty("application.name") + " v" + p.getProperty("application.version")).setVisible(true);
         } else if (!run(args)){
             System.out.print("Usage: " + p.getProperty("application.name") + ".jar <file/folder name>\n" +
-                    " -rf,--replace-from        The type of ID to replace from. Possible values: numeric, legacy (pre 1.13), flattening (Default: numeric)" +
-                    " -rt,--replace-to          The type of ID to replace to. Possible values: numeric, legacy (pre 1.13), flattening (Default: flattening)" +
+                    " -rf,--replace-from        The type of ID to replace from. Possible values: numeric, legacy (pre 1.13), flattening (Default: numeric)\n" +
+                    " -rt,--replace-to          The type of ID to replace to. Possible values: numeric, legacy (pre 1.13), flattening (Default: flattening)\n" +
                     " -r,--regex <regex>        Regex for matching the ID string. Needs to have 3 groups. (One before, one the ID and the third the stuff after the ID) (Default: depending on replace-from)\n" +
+                    " -d,--depth <amount>       Amount of sub folders that should be searched though. (Default: 1)\n" +
                     " -f,--file-match <regex>   Files need to match this regex for the tool to replace stuff inside them (Default: \\w+\\.yml)\n" +
                     " -l,--lowercase true/false Should the material name be lowercase? (Default: true)\n" +
                     "All parameters are optional\n");
@@ -67,6 +68,7 @@ public class IdConverter {
     
         String regex = null;
         boolean lowercase = true;
+        int maxDepth = 1;
         String fileRegex = "\\w+\\.yml";
     
         IdMappings.IdType replaceFrom = IdMappings.IdType.NUMERIC;
@@ -108,6 +110,16 @@ public class IdConverter {
             
             if ("r".equals(par) || "regex".equalsIgnoreCase(par)) {
                 regex = value;
+            } else if ("d".equals(par) || "depth".equalsIgnoreCase(par)) {
+                try {
+                    maxDepth = Integer.parseInt(value);
+                    if (maxDepth < 1) {
+                        throw new IllegalArgumentException();
+                    }
+                } catch (IllegalArgumentException e) {
+                    System.out.print(value + " is not a valid number for the depth!\n\n");
+                    return false;
+                }
             } else if ("f".equals(par) || "file-matches".equalsIgnoreCase(par)) {
                 fileRegex = value;
             } else if ("l".equals(par) || "lowercase".equalsIgnoreCase(par)) {
@@ -133,7 +145,7 @@ public class IdConverter {
             regex = replaceFrom.getRegex();
         }
         
-        ReturnState r = replace(Collections.singletonList(Paths.get(path)), fileRegex, replaceFrom, replaceTo, regex, lowercase);
+        ReturnState r = replace(Collections.singletonList(Paths.get(path)), maxDepth, fileRegex, replaceFrom, replaceTo, regex, lowercase);
         if (r.getType() == ReturnType.SUCCESS) {
             System.out.print("Successfully replaced IDs in file(s) with Material names!\n");
         } else if (r.getMessage().isPresent()) {
@@ -147,6 +159,7 @@ public class IdConverter {
     /**
      * Replace the ids in a certain path that match a regex
      * @param paths             The paths to match
+     * @param maxDepth          Maximum amount of sub folders that are searched though
      * @param fileRegexString   The regex that the file names have to match
      * @param replaceFrom       Which type of id do we want to replace from
      * @param replaceTo         Which type of id do we want to replace to
@@ -154,7 +167,7 @@ public class IdConverter {
      * @param lowercase         Whether the material name should be lowercase
      * @return The return state
      */
-    public static ReturnState replace(List<Path> paths, String fileRegexString, IdMappings.IdType replaceFrom, IdMappings.IdType replaceTo, String regexString, boolean lowercase) {
+    public static ReturnState replace(List<Path> paths, int maxDepth, String fileRegexString, IdMappings.IdType replaceFrom, IdMappings.IdType replaceTo, String regexString, boolean lowercase) {
         if (paths.isEmpty()) {
             return new ReturnState(ReturnType.MISSING_FILE, "Please select a path!");
         }
@@ -174,7 +187,7 @@ public class IdConverter {
             if (Files.isRegularFile(path)) {
                 return replaceInFile(path, replaceFrom, replaceTo, regex, lowercase);
             } else if (Files.isDirectory(path)) {
-                return replaceInDirectory(path, replaceFrom, replaceTo, fileRegex, regex, lowercase);
+                return replaceInDirectory(path, replaceFrom, replaceTo, fileRegex, 1, maxDepth, regex, lowercase);
             }
         }
         return new ReturnState(ReturnType.SUCCESS);
@@ -226,7 +239,7 @@ public class IdConverter {
         return new ReturnState(ReturnType.SUCCESS);
     }
     
-    private static ReturnState replaceInDirectory(Path path, IdMappings.IdType replaceFrom, IdMappings.IdType replaceTo, Pattern fileRegex, Pattern regex, boolean lowercase) {
+    private static ReturnState replaceInDirectory(Path path, IdMappings.IdType replaceFrom, IdMappings.IdType replaceTo, Pattern fileRegex, int depth, int maxDepth, Pattern regex, boolean lowercase) {
         ReturnState r = new ReturnState(ReturnType.SUCCESS);
         try {
             
@@ -244,7 +257,9 @@ public class IdConverter {
                         rs = replaceInFile(p, replaceFrom, replaceTo, regex, lowercase);
                     }
                 } else if (Files.isDirectory(p)) {
-                    rs = replaceInDirectory(p, replaceFrom, replaceTo, fileRegex, regex, lowercase);
+                    if (depth < maxDepth) {
+                        rs = replaceInDirectory(p, replaceFrom, replaceTo, fileRegex, depth + 1, maxDepth, regex, lowercase);
+                    }
                 }
                 if (rs.getType() != ReturnType.SUCCESS) {
                     r.setType(rs.getType());
