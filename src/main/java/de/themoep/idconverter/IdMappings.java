@@ -825,10 +825,10 @@ public class IdMappings {
                 BY_NUMERIC_ID.put(mapping.getNumericId() + (mapping.getData() != 0 ? (INTERNAL_DELIMITER + mapping.getData()) : ""), mapping);
             }
             if (mapping.getLegacyType() != null) {
-                BY_LEGACY_NAME.put(mapping.getLegacyType().toLowerCase() + (mapping.getData() != 0 ? (INTERNAL_DELIMITER + mapping.getData()) : ""), mapping);
+                BY_LEGACY_NAME.put(mapping.getLegacyType() + (mapping.getData() != 0 ? (INTERNAL_DELIMITER + mapping.getData()) : ""), mapping);
             }
             if (mapping.getFlatteningType() != null) {
-                BY_FLATTENING_NAME.put(mapping.getFlatteningType().toLowerCase(), mapping);
+                BY_FLATTENING_NAME.put(mapping.getFlatteningType(), mapping);
             }
         }
     }
@@ -857,11 +857,11 @@ public class IdMappings {
     }
     
     public static Mapping getById(String id) {
-        return BY_NUMERIC_ID.get(id.toLowerCase());
+        return BY_NUMERIC_ID.get(id.toUpperCase());
     }
     
     public static Mapping getByLegacyType(String oldType) {
-        return BY_LEGACY_NAME.get(oldType.toLowerCase());
+        return BY_LEGACY_NAME.get(oldType.toUpperCase());
     }
     
     public static Mapping getByFlatteningType(String flatteningType) {
@@ -876,8 +876,8 @@ public class IdMappings {
         private Note note = null;
     
         public Mapping(int numericId, int data, String legacyType, String flatteningType) {
-            this.flatteningType = flatteningType;
-            this.legacyType = legacyType;
+            this.flatteningType = flatteningType != null ? flatteningType.toUpperCase() : null;
+            this.legacyType = legacyType != null ? legacyType.toUpperCase() : null;
             this.numericId = numericId;
             this.data = data;
         }
