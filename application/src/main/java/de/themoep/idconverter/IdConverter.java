@@ -38,6 +38,7 @@ public class IdConverter {
     private static Properties p = new Properties();
     
     public static void main(String[] args) {
+        
         try {
             InputStream s = IdConverter.class.getClassLoader().getResourceAsStream("app.properties");
             p.load(s);

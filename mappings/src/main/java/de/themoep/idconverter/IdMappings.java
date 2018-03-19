@@ -1,7 +1,7 @@
 package de.themoep.idconverter;
 
 /*
- * Minecraft ID converter
+ * Minecraft ID mappings
  * Copyright (C) 2017  Max Lee (https://github.com/Phoenix616)
  *
  * This program is free software: you can redistribute it and/or modify

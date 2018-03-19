@@ -2,3 +2,5 @@
 /.idea/
 /target/
 *.iml
+/mappings/target/
+dependency-reduced-pom.xml

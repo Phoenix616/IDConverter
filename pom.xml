@@ -4,75 +4,22 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>de.themoep</groupId>
-    <artifactId>idconverter</artifactId>
-    <version>1.2-SNAPSHOT</version>
-    <name>IDConverter</name>
+    <groupId>de.themoep.idconverter</groupId>
+    <artifactId>parent</artifactId>
+    <packaging>pom</packaging>
+    <version>parent</version>
+
+    <modules>
+        <module>mappings</module>
+        <module>application</module>
+    </modules>
 
     <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <version.mappings>1.2-SNAPSHOT</version.mappings>
+        <version.application>1.2-SNAPSHOT</version.application>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <build.number>${buildNumber}</build.number>
-        <application.version>${project.version} ${buildDescription}</application.version>
     </properties>
-
-    <build>
-        <finalName>${project.name}</finalName>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.3.1</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>de.themoep.idconverter.IdConverter</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.6.1</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
-    <profiles>
-        <profile>
-            <id>static_build_number</id>
-            <activation>
-                <property>
-                    <name>!env.BUILD_NUMBER</name>
-                </property>
-            </activation>
-            <properties>
-                <buildNumber>0</buildNumber>
-                <buildDescription>(compiled at ${maven.build.timestamp})</buildDescription>
-            </properties>
-        </profile>
-        <profile>
-            <id>dynamic_build_number</id>
-            <activation>
-                <property>
-                    <name>env.BUILD_NUMBER</name>
-                </property>
-            </activation>
-            <properties>
-                <buildNumber>${env.BUILD_NUMBER}</buildNumber>
-                <buildDescription>(build ${env.BUILD_NUMBER})</buildDescription>
-            </properties>
-        </profile>
-    </profiles>
-
 
 </project>
