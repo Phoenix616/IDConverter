@@ -133,6 +133,9 @@ public class IdMappings {
             new Mapping(44, 2, "step", "petrified_oak_slab"),
             new Mapping(44, 3, "step", "cobblestone_slab"),
             new Mapping(44, 4, "step", "brick_slab"),
+            new Mapping(44, 5, "step", "stone_brick_slab"),
+            new Mapping(44, 6, "step", "nether_brick_slab"),
+            new Mapping(44, 7, "step", "quartz_slab"),
             new Mapping(45, "brick", "bricks"),
             new Mapping(46, "tnt"),
             new Mapping(47, "bookshelf"),
@@ -514,6 +517,7 @@ public class IdMappings {
             new Mapping(261, "bow"),
             new Mapping(262, "arrow"),
             new Mapping(263, "coal"),
+            new Mapping(263, 1, "coal", "charcoal"),
             new Mapping(264, "diamond"),
             new Mapping(265, "iron_ingot"),
             new Mapping(266, "gold_ingot"),
@@ -606,22 +610,22 @@ public class IdMappings {
             new Mapping(349, 3, "raw_fish", "pufferfish"),
             new Mapping(350, "cooked_fish", "cooked_cod"),
             new Mapping(350, 1, "cooked_fish", "cooked_salmon"),
-            new Mapping(351, "ink_sack", "minecraft:bone_meal"),
-            new Mapping(351, 1, "ink_sack", "orange_dye"),
-            new Mapping(351, 2, "ink_sack", "magenta_dye"),
-            new Mapping(351, 3, "ink_sack", "light_blue_dye"),
-            new Mapping(351, 4, "ink_sack", "dandelion_yellow"),
-            new Mapping(351, 5, "ink_sack", "lime_dye"),
-            new Mapping(351, 6, "ink_sack", "pink_dye"),
-            new Mapping(351, 7, "ink_sack", "gray_dye"),
-            new Mapping(351, 8, "ink_sack", "light_gray_dye"),
-            new Mapping(351, 9, "ink_sack", "cyan_dye"),
-            new Mapping(351, 10, "ink_sack", "purple_dye"),
-            new Mapping(351, 11, "ink_sack", "lapis_lazuli"),
-            new Mapping(351, 12, "ink_sack", "cocoa_beans"),
-            new Mapping(351, 13, "ink_sack", "cactus_green"),
-            new Mapping(351, 14, "ink_sack", "rose_red"),
-            new Mapping(351, 15, "ink_sack", "ink_sac"),
+            new Mapping(351, "ink_sack", "ink_sac"),
+            new Mapping(351, 1, "ink_sack", "rose_red"),
+            new Mapping(351, 2, "ink_sack", "cactus_green"),
+            new Mapping(351, 3, "ink_sack", "cocoa_beans"),
+            new Mapping(351, 4, "ink_sack", "lapis_lazuli"),
+            new Mapping(351, 5, "ink_sack", "purple_dye"),
+            new Mapping(351, 6, "ink_sack", "cyan_dye"),
+            new Mapping(351, 7, "ink_sack", "light_gray_dye"),
+            new Mapping(351, 8, "ink_sack", "gray_dye"),
+            new Mapping(351, 9, "ink_sack", "pink_dye"),
+            new Mapping(351, 10, "ink_sack", "lime_dye"),
+            new Mapping(351, 11, "ink_sack", "dandelion_yellow"),
+            new Mapping(351, 12, "ink_sack", "light_blue_dye"),
+            new Mapping(351, 13, "ink_sack", "magenta_dye"),
+            new Mapping(351, 14, "ink_sack", "orange_dye"),
+            new Mapping(351, 15, "ink_sack", "bone_meal"),
             new Mapping(352, "bone"),
             new Mapping(353, "sugar", "sugar"),
             new Mapping(354, "cake", "cake"),
@@ -822,10 +826,16 @@ public class IdMappings {
     static {
         for (Mapping mapping : MAPPINGS) {
             if (mapping.getNumericId() >= 0) {
-                BY_NUMERIC_ID.put(mapping.getNumericId() + (mapping.getData() != 0 ? (INTERNAL_DELIMITER + mapping.getData()) : ""), mapping);
+                BY_NUMERIC_ID.put(mapping.getNumericId() + INTERNAL_DELIMITER + mapping.getData(), mapping);
+                if (mapping.getData() == 0) {
+                    BY_NUMERIC_ID.put(String.valueOf(mapping.getNumericId()), mapping);
+                }
             }
             if (mapping.getLegacyType() != null) {
-                BY_LEGACY_NAME.put(mapping.getLegacyType() + (mapping.getData() != 0 ? (INTERNAL_DELIMITER + mapping.getData()) : ""), mapping);
+                BY_LEGACY_NAME.put(mapping.getLegacyType() + INTERNAL_DELIMITER + mapping.getData(), mapping);
+                if (mapping.getData() == 0) {
+                    BY_LEGACY_NAME.put(mapping.getLegacyType(), mapping);
+                }
             }
             if (mapping.getFlatteningType() != null) {
                 BY_FLATTENING_NAME.put(mapping.getFlatteningType(), mapping);
