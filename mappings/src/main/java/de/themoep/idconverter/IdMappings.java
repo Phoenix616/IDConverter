@@ -606,7 +606,7 @@ public class IdMappings {
             new Mapping(348, "glowstone_dust"),
             new Mapping(349, "raw_fish", "cod"),
             new Mapping(349, 1, "raw_fish", "salmon"),
-            new Mapping(349, 2, "raw_fish", "clownfish"),
+            new Mapping(349, 2, "raw_fish", "tropical_fish"),
             new Mapping(349, 3, "raw_fish", "pufferfish"),
             new Mapping(350, "cooked_fish", "cooked_cod"),
             new Mapping(350, 1, "cooked_fish", "cooked_salmon"),
