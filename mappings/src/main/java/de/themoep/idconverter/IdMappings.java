@@ -31,7 +31,7 @@ public class IdMappings {
             new Mapping(1, 4, "stone", "polished_diorite"),
             new Mapping(1, 5, "stone", "andesite"),
             new Mapping(1, 6, "stone", "polished_andesite"),
-            new Mapping(2, "grass"),
+            new Mapping(2, "grass", "grass_block"),
             new Mapping(3, "dirt"),
             new Mapping(3, 1, "dirt", "coarse_dirt"),
             new Mapping(3, 2, "dirt", "podzol"),
