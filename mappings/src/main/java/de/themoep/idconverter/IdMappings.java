@@ -875,7 +875,7 @@ public class IdMappings {
     }
     
     public static Mapping getByFlatteningType(String flatteningType) {
-        return BY_FLATTENING_NAME.get(flatteningType.toLowerCase());
+        return BY_FLATTENING_NAME.get(flatteningType.toUpperCase());
     }
     
     public static class Mapping {
