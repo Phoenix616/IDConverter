@@ -19,6 +19,7 @@ package de.themoep.idconverter;
  */
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class IdMappings {
@@ -867,15 +868,15 @@ public class IdMappings {
     }
     
     public static Mapping getById(String id) {
-        return BY_NUMERIC_ID.get(id.toUpperCase());
+        return BY_NUMERIC_ID.get(id.toUpperCase(Locale.ENGLISH));
     }
     
     public static Mapping getByLegacyType(String oldType) {
-        return BY_LEGACY_NAME.get(oldType.toUpperCase());
+        return BY_LEGACY_NAME.get(oldType.toUpperCase(Locale.ENGLISH));
     }
     
     public static Mapping getByFlatteningType(String flatteningType) {
-        return BY_FLATTENING_NAME.get(flatteningType.toUpperCase());
+        return BY_FLATTENING_NAME.get(flatteningType.toUpperCase(Locale.ENGLISH));
     }
     
     public static class Mapping {
@@ -886,8 +887,8 @@ public class IdMappings {
         private Note note = null;
     
         public Mapping(int numericId, int data, String legacyType, String flatteningType) {
-            this.flatteningType = flatteningType != null ? flatteningType.toUpperCase() : null;
-            this.legacyType = legacyType != null ? legacyType.toUpperCase() : null;
+            this.flatteningType = flatteningType != null ? flatteningType.toUpperCase(Locale.ENGLISH) : null;
+            this.legacyType = legacyType != null ? legacyType.toUpperCase(Locale.ENGLISH) : null;
             this.numericId = numericId;
             this.data = data;
         }

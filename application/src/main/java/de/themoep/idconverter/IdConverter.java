@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -127,14 +128,14 @@ public class IdConverter {
                 lowercase = Boolean.parseBoolean(value);
             } else if ("rf".equals(par) || "replace-from".equalsIgnoreCase(par)) {
                 try {
-                    replaceFrom = IdMappings.IdType.valueOf(value.toUpperCase());
+                    replaceFrom = IdMappings.IdType.valueOf(value.toUpperCase(Locale.ENGLISH));
                 } catch (IllegalArgumentException e) {
                     System.out.print(value + " is not a valid replace type!\n\n");
                     return false;
                 }
             } else if ("rt".equals(par) || "replace-to".equalsIgnoreCase(par)) {
                 try {
-                    replaceTo = IdMappings.IdType.valueOf(value.toUpperCase());
+                    replaceTo = IdMappings.IdType.valueOf(value.toUpperCase(Locale.ENGLISH));
                 } catch (IllegalArgumentException e) {
                     System.out.print(value + " is not a valid replace type!\n\n");
                     return false;
@@ -221,7 +222,7 @@ public class IdConverter {
                         matString = "UNKNOWN_" + idStr;
                     }
                     if (lowercase) {
-                        matString = matString.toLowerCase();
+                        matString = matString.toLowerCase(Locale.ENGLISH);
                     }
                     content = content.substring(0, matcher.start(2) + offset) + matString + content.substring(matcher.end(2) + offset);
                     offset += matString.length() - idStr.length();
