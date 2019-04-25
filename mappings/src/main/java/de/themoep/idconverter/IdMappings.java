@@ -455,7 +455,7 @@ public class IdMappings {
             new Mapping(226, "gray_shulker_box"),
             new Mapping(227, "silver_shulker_box", "light_gray_shulker_box"),
             new Mapping(228, "cyan_shulker_box"),
-            new Mapping(229, "purple_shulker_box"),
+            new Mapping(229, "purple_shulker_box", "shulker_box"),
             new Mapping(230, "blue_shulker_box"),
             new Mapping(231, "brown_shulker_box"),
             new Mapping(232, "green_shulker_box"),
