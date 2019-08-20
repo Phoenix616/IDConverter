@@ -672,7 +672,7 @@ public class IdMappings {
             new Mapping(379, "brewing_stand_item", "brewing_stand"),
             new Mapping(380, "cauldron_item", "cauldron"),
             new Mapping(381, "eye_of_ender", "ender_eye"),
-            new Mapping(382, "speckled_melon"),
+            new Mapping(382, "speckled_melon", "glistering_melon_slice"),
             new Mapping(383, "monster_egg", new Note("each spawn egg now has it's own id corresponding to the entity id. other data is set via nbt tags/meta")),
             new Mapping(383, 4, "monster_egg", "elder_guardian_spawn_egg"),
             new Mapping(383, 5, "monster_egg", "wither_skeleton_spawn_egg"),
