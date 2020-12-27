@@ -652,7 +652,7 @@ public class IdMappings {
             new Mapping(355, 15, "bed", "black_bed"),
             new Mapping(356, "diode", "repeater"),
             new Mapping(357, "cookie", "cookie"),
-            new Mapping(358, "map"),
+            new Mapping(358, "map", "filled_map"),
             new Mapping(359, "shears"),
             new Mapping(360, "melon", "melon"),
             new Mapping(361, "pumpkin_seeds", "pumpkin_seeds"),
